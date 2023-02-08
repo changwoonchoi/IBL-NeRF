@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/IBL-NeRF/kitchen
+basedir = ../logs/IBL-NeRF/kitchen

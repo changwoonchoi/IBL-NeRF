@@ -43,7 +43,7 @@ git clone https://github.com/changwoonchoi/IBL-NeRF.git
 cd IBL-NeRF
 conda create -n IBL-NeRF python=3.8
 conda activate IBL-NeRF
-pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113
 pip install -r requirements.txt
 ```
 
@@ -53,7 +53,7 @@ The dataset includes rendered images with path tracer with its corresponding cam
 Also, the dataset contains intrinsic components (albedo, irradiance, normal, and roughness) for evaluation.
 Put the data in the directory "data/".
 ### Prior Loss
-To impose prior loss ($\mathcal{L}_{\text{prior}}$ and $\mathcal{L}_{I,\text{reg}}$), you need to run single-image based intrinsic decomposition algorithms.
+To impose prior loss ( $L_{\text{prior}}$ and $L_{I,\text{reg}}$ ), you need to run single-image based intrinsic decomposition algorithms.
 We used Bell et al.[[Link](https://github.com/seanbell/intrinsic)] to generate the pseudo albedo and irradiance maps.
 Also, we used Tinghui Zhou et al.[[Link](https://github.com/tinghuiz/learn-reflectance)] for the additional results in the supplementary material.
 You can run the algorithm yourself, but we provide the results of the algorithm in the dataset.
@@ -64,6 +64,10 @@ To train IBL-NeRF in the <span style="font-variant:small-caps;">Kitchen</span> s
 cd src
 python train.py --config ../configs/IBL-NeRF/kitchen.txt
 ```
+
+## TODO
+- [ ] Remove unnecessary codes
+- [ ] Release dataset
 
 ## Citation
 Cite as below if you find this paper and repository are helpful to you:

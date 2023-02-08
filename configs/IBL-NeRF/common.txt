@@ -1,0 +1,66 @@
+basedir = ../logs/IBL-NeRF
+
+dataset_type = 
+
+no_batching = True
+lindisp = False
+load_depth_range_from_file
+
+# near_plane = 1
+# far_plane = 20
+
+
+load_priors=True
+N_iter_ignore_prior = 100000
+N_iter = 120000
+N_iter_ignore_approximated_radiance = 10000
+
+freeze_roughness=True
+
+beta_prior_albedo = 1
+beta_irradiance_reg = 0.1
+correct_depth_for_prefiltered_radiance_infer=True
+
+
+use_viewdirs = True
+lrate_decay = 500
+# lrate = 5e-5
+
+N_samples = 64
+N_importance = 128
+N_rand = 512
+
+# if calculate normal chunk should be small !!
+chunk = 1024
+
+precrop_iters = 0
+precrop_frac = 0.5
+
+image_scale = 1
+
+i_video = 10000000000000
+i_testset = 5000
+testskip = 32
+
+
+sample_length = 6
+
+beta_albedo_cluster = 0
+beta_indirect_sparse = 0
+beta_render = 1
+beta_albedo_render = 0.5
+beta_radiance_render = 1
+
+
+beta_smooth_albedo = 1
+beta_smooth_indirect = 1
+beta_inferred_normal = 0.5
+beta_inferred_depth = 20
+
+
+N_iter_ignore_normal = 0
+N_iter_ignore_smooth = 15000
+
+coarse_radiance_number = 3
+
+calculating_normal_type = normal_map_from_depth_gradient_epsilon
