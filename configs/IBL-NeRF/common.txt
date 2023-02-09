@@ -1,6 +1,6 @@
 basedir = ../logs/IBL-NeRF
 
-dataset_type = 
+dataset_type = mitsuba
 
 no_batching = True
 lindisp = False

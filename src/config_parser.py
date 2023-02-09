@@ -213,7 +213,7 @@ def config_parser(default_files=None):
 
 
 	# dataset options
-	parser.add_argument("--dataset_type", type=str, default='llff', help='options: llff / blender / deepvoxels')
+	parser.add_argument("--dataset_type", type=str, default='mitsuba', help='dataset type. we support only mitsuba for current version.')
 	parser.add_argument("--testskip", type=int, default=8,
 	                    help='will load 1/N images from test/val sets, useful for large datasets like deepvoxels')
 
