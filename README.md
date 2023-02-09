@@ -66,8 +66,9 @@ python train.py --config ../configs/IBL-NeRF/kitchen.txt
 ```
 
 ## TODO
-- [ ] Remove unnecessary codes
-- [x] Release dataset
+- [ ] Remove unnecessary codes 
+- [ ] Material Editing & Object Insertion
+- [x] ~~Release dataset~~
 
 ## Citation
 Cite as below if you find this paper and repository are helpful to you:
