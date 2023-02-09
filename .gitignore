@@ -160,5 +160,6 @@ cython_debug/
 #.idea/
 
 data
+logs
 .idea/*
 .DS_Store
