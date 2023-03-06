@@ -1,2 +1,3 @@
 include = common.txt
 gamma_correct=True
+render_factor = 1

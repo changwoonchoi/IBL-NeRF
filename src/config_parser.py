@@ -160,7 +160,7 @@ def config_parser(default_files=None):
 	                    help='do not optimize, reload weights and render out render_poses path')
 	parser.add_argument("--render_test", action='store_true',
 	                    help='render the test set instead of render_poses path')
-	parser.add_argument("--render_factor", type=int, default=0,
+	parser.add_argument("--render_factor", type=int, default=1,
 	                    help='downsampling factor to speed up rendering, set 4 or 8 for fast preview')
 	parser.add_argument("--render_decompose", action='store_true', help="render decomposed instance in test phase")
 	parser.add_argument("--alpha_th", type=float, default=.0, help='decompose alpha thredhold')

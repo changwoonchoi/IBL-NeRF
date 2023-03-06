@@ -135,7 +135,7 @@ def test(args):
 	hemisphere_samples = get_hemisphere_samples(args.N_hemisphere_sample_sqrt)
 	hemisphere_samples = torch.Tensor(hemisphere_samples).to(args.device)
 
-	def run_test_dataset(_i, render_factor=4):
+	def run_test_dataset(_i, render_factor=1):
 		testsavedir = os.path.join(args.export_basedir, expname, 'testset_{:06d}'.format(_i))
 		os.makedirs(testsavedir, exist_ok=True)
 
@@ -149,7 +149,7 @@ def test(args):
 		)
 
 	with torch.no_grad():
-		run_test_dataset(global_step, render_factor=1)
+		run_test_dataset(global_step, render_factor=args.render_factor)
 
 
 def train(args):
@@ -624,7 +624,7 @@ def train(args):
 
 		if time_limit_in_sec > 0 and elapsed_time > time_limit_in_sec:
 			print("%f sec is over" % time_limit_in_sec, elapsed_time)
-			run_test_dataset(i, render_factor=4)
+			run_test_dataset(i, render_factor=args.render_factor)
 			save_file(i)
 			break
 
@@ -638,7 +638,7 @@ def train(args):
 
 		# export images
 		if i % args.i_testset == 0 and i > 0:
-			run_test_dataset(i, render_factor=4)
+			run_test_dataset(i, render_factor=args.render_factor)
 
 		global_step += 1
 
