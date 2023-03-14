@@ -4,7 +4,7 @@ Official implementation of the paper "IBL-NeRF: Image-Based Lighting Formulation
 <img src="assets/teaser.png" alt="teaser image"/>
 </div>
 
-### [Paper](https://arxiv.org/abs/2210.08202) | [Data](https://drive.google.com/drive/folders/1ejnk8VYVGAvfapZeTUxKmcfH7RAMVK7U?usp=share_link)
+### [Project Page](https://changwoon.info/publications/IBL-NeRF) | [Paper](https://arxiv.org/abs/2210.08202) | [Data](https://drive.google.com/drive/folders/1ejnk8VYVGAvfapZeTUxKmcfH7RAMVK7U?usp=share_link)
 ## Overview
 We propose IBL-NeRF, which decomposes the neural radiance fields (NeRF) of large-scale indoor scenes into intrinsic components.
 Previous approaches for the inverse rendering of NeRF transform the implicit volume to fit the rendering pipeline of explicit geometry, and approximate the views of segmented, isolated objects with environment lighting.
