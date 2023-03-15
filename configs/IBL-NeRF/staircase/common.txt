@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/IBL-NeRF/staircase
+basedir = ../logs/IBL-NeRF/staircase

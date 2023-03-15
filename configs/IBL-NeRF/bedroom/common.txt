@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/IBL-NeRF/bedroom
+basedir = ../logs/IBL-NeRF/bedroom

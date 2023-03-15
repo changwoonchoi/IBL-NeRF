@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/IBL-NeRF/veach_door_simple
+basedir = ../logs/IBL-NeRF/veach_door_simple

@@ -1,0 +1,42 @@
+basedir = ../logs
+
+no_batching = True
+lindisp = False
+
+load_priors = True
+
+freeze_roughness = True
+
+beta_prior_albedo = 1
+beta_irradiance_reg = 0.1
+correct_depth_for_prefiltered_radiance_infer = True
+
+use_viewdirs = True
+lrate_decay = 500
+
+N_samples = 64
+N_importance = 128
+N_rand = 512
+
+# if calculate normal chunk should be small
+chunk = 1024
+
+precrop_iters = 0
+precrop_frac = 0.5
+
+image_scale = 1
+
+i_video = 10000000000000
+
+beta_render = 1
+beta_albedo_render = 0.5
+beta_radiance_render = 1
+
+beta_inferred_normal = 0.5
+beta_inferred_depth = 20
+
+N_iter_ignore_normal = 0
+
+coarse_radiance_number = 3
+
+calculating_normal_type = normal_map_from_depth_gradient_epsilon

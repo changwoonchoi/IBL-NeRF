@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/IBL-NeRF/veach-ajar
+basedir = ../logs/IBL-NeRF/veach-ajar
