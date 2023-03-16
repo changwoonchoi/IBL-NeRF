@@ -65,10 +65,23 @@ cd src
 python train.py --config ../configs/IBL-NeRF/kitchen.txt
 ```
 
-## TODO
-- [ ] Remove unnecessary codes 
-- [ ] Material Editing & Object Insertion
-- [x] ~~Release dataset~~
+## Evaluation
+To infer and measure error metrics on test set, run the scripts below.
+This code will automatically find the latest checkpoint in the log directory and render test images.
+```
+python test.py --config ../configs/IBL-NeRF/kitchen/IBL-NeRF.txt
+python evaluation/calculate_metrics.py --gt ../data/IBL-NeRF/kitchen --pred ../logs_eval/IBL-NeRF/kitchen/IBL-NeRF/testset_119999 --dataset_type mitsuba
+```
+
+## Material Editing
+```
+python test.py --config ../configs/IBL-NeRF/kitchen/edit_intrinsic.txt
+```
+
+## Object Insertion
+```
+python test.py --config ../configs/IBL-NeRF/living-room-2/object_insert.txt
+```
 
 ## Citation
 Cite as below if you find this paper and repository are helpful to you:
