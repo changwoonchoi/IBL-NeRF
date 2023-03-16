@@ -1,0 +1,16 @@
+include = common.txt
+
+expname = IBL-NeRF
+
+gamma_correct=True
+render_factor = 1
+
+edit_intrinsic
+editing_img_idx = 14
+
+num_edit_objects = 1
+edit_roughness
+edit_normal
+
+editing_target_roughness_list = [0]
+edit_normal_by_img
