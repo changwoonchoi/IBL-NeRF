@@ -8,6 +8,7 @@ import torch
 from torchvision import transforms
 from utils.image_utils import *
 
+
 class NerfDataset(Dataset, ABC):
 	def __init__(self, name, **kwargs):
 		self.original_width = 0
@@ -31,7 +32,6 @@ class NerfDataset(Dataset, ABC):
 		self.normals = []
 		self.albedos = []
 		self.roughness = []
-		self.instances = []
 		self.depths = []
 		self.diffuses = []
 		self.speculars = []
@@ -64,6 +64,24 @@ class NerfDataset(Dataset, ABC):
 
 		self.near = kwargs.get("near_plane", 1)
 		self.far = kwargs.get("far_plane", 10)
+
+		self.editing_idx = kwargs.get("editing_idx", None)
+
+		self.load_edit_intrinsic_mask = kwargs.get("load_edit_intrinsic_mask", False)
+		self.load_edit_albedo = kwargs.get("load_edit_albedo", False)
+		self.load_edit_normal = kwargs.get("load_edit_normal", False)
+		self.load_edit_irradiance = kwargs.get("load_edit_irradiance", False)
+
+		self.edit_intrinsic_masks = []
+		self.edit_albedos = []
+		self.edit_normals = []
+		self.edit_irradiances = []
+
+		self.object_insert = kwargs.get("object_insert", False)
+		self.object_insert_masks = []
+		self.object_insert_depths = []
+		self.object_insert_normals = []
+
 
 	def get_focal_matrix(self):
 		K = np.array([
@@ -101,6 +119,31 @@ class NerfDataset(Dataset, ABC):
 			prior_irradiance_temp = self.prior_irradiances[i].permute((2, 0, 1))
 			result["prior_albedo"] = t(prior_albedo_temp).permute((2, 0, 1))
 			result["prior_irradiance"] = t(prior_irradiance_temp).permute((2, 0, 1))
+
+		if self.load_edit_intrinsic_mask:
+			edit_intrinsic_mask_temp = self.edit_intrinsic_masks[i].permute((2, 0, 1))
+			result["edit_intrinsic_mask"] = t(edit_intrinsic_mask_temp).permute((1, 2, 0))
+
+		if self.load_edit_albedo:
+			edit_albedo_temp = self.edit_albedos[i].permute((2, 0, 1))
+			result["edit_albedo"] = t(edit_albedo_temp).permute((1, 2, 0))
+
+		if self.load_edit_normal:
+			edit_normal_temp = self.edit_normals[i].permute((2, 0, 1))
+			result["edit_normal"] = t(edit_normal_temp).permute((1, 2, 0))
+
+		if self.load_edit_irradiance:
+			edit_irradiance_temp = self.edit_irradiances[i].permute((2, 0, 1))
+			result["edit_irradiance"] = t(edit_irradiance_temp).permute((1, 2, 0))
+
+		if self.object_insert:
+			object_insert_mask_temp = self.object_insert_masks[i].permute((2, 0, 1))
+			object_insert_depth_temp = self.object_insert_depths[i].permute((2, 0, 1))
+			object_insert_normal_temp = self.object_insert_normals[i].permute((2, 0, 1))
+
+			result["object_insert_mask"] = t(object_insert_mask_temp).permute((1, 2, 0))
+			result["object_insert_depth"] = t(object_insert_depth_temp).permute((1, 2, 0))
+			result["object_insert_normal"] = t(object_insert_normal_temp).permute((1, 2, 0))
 
 		return result
 
@@ -147,7 +190,7 @@ class NerfDataset(Dataset, ABC):
 	def get_test_render_poses(self):
 		pass
 
-	def load_all_data(self, num_of_workers=4):
+	def load_all_data(self, num_of_workers=4, editing_idx=None):
 		"""
 		Load all data using multiprocessing
 		:param num_of_workers: number of multiprocess
@@ -157,6 +200,8 @@ class NerfDataset(Dataset, ABC):
 			return
 		data_loader = DataLoader(self, num_workers=num_of_workers, batch_size=1)
 		for i, data in enumerate(data_loader):
+			# if editing_idx is not None and i != editing_idx:
+			# 	continue
 			if "image" in data:
 				image = data["image"][0]
 				self.images.append(image)
@@ -178,6 +223,20 @@ class NerfDataset(Dataset, ABC):
 			if self.load_priors:
 				self.prior_albedos.append(data["prior_albedo"][0])
 				self.prior_irradiances.append(data["prior_irradiance"][0])
+			if self.load_edit_intrinsic_mask:
+				self.edit_intrinsic_masks.append(data["edit_intrinsic_mask"][0])
+			if self.load_edit_albedo:
+				self.edit_albedos.append(data["edit_albedo"][0])
+			if self.load_edit_normal:
+				self.edit_normals.append(data["edit_normal"][0])
+			if self.load_edit_normal:
+				self.edit_normals.append(data["edit_normal"][0])
+			if self.load_edit_irradiance:
+				self.edit_irradiances.append(data["edit_irradiance"][0])
+			if self.object_insert:
+				self.object_insert_masks.append(data["object_insert_mask"][0])
+				self.object_insert_depths.append(data["object_insert_depth"][0])
+				self.object_insert_normals.append(data["object_insert_normal"][0])
 		self.full_data_loaded = True
 
 	def to_tensor(self, device):
@@ -209,6 +268,19 @@ class NerfDataset(Dataset, ABC):
 		if self.load_priors:
 			self.prior_albedos = torch.stack(self.prior_albedos, 0).to(device)
 			self.prior_irradiances = torch.stack(self.prior_irradiances, 0).to(device)
+		if self.load_edit_intrinsic_mask:
+			self.edit_intrinsic_masks = torch.stack(self.edit_intrinsic_masks, 0).to(device)
+		if self.load_edit_albedo:
+			self.edit_albedos = torch.stack(self.edit_albedos, 0).to(device)
+		if self.load_edit_normal:
+			self.edit_normals = torch.stack(self.edit_normals, 0).to(device)
+		if self.load_edit_irradiance:
+			self.edit_irradiances = torch.stack(self.edit_irradiances, 0).to(device)
+		if self.object_insert:
+			self.object_insert_masks = torch.stack(self.object_insert_masks, 0).to(device)
+			self.object_insert_depths = torch.stack(self.object_insert_depths, 0).to(device)
+			self.object_insert_normals = torch.stack(self.object_insert_normals, 0).to(device)
+
 	def __getitem__(self, item):
 		pass
 
@@ -226,14 +298,16 @@ class NerfDataset(Dataset, ABC):
 		pass
 
 
-
 def load_dataset(dataset_type, basedir, **kwargs) -> NerfDataset:
 	from dataset.dataset_mitsuba import MitsubaDataset
 	from dataset.dataset_mitsuba_eval import MitsubaEvalDataset
+	from dataset.dataset_colmap import ColmapDataset
 
 	if dataset_type == "mitsuba":
 		return MitsubaDataset(basedir, **kwargs)
 	elif dataset_type == "mitsuba_eval":
 		return MitsubaEvalDataset(basedir, **kwargs)
+	elif dataset_type == "colmap":
+		return ColmapDataset(basedir, **kwargs)
 	else:
 		raise ValueError("Unknown dataset type: %s" % dataset_type)

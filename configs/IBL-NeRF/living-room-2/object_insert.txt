@@ -1,0 +1,14 @@
+include = common.txt
+
+expname = IBL-NeRF
+
+gamma_correct=True
+render_factor = 1
+
+insert_object
+inserting_img_idx = 2
+
+num_insert_objects = 4
+inserting_target_roughness_list = [0.2, 1, 1, 1]
+inserting_target_albedo_list = [0.870588, 0.3215686, 0.443137254, 0.39607843, 0.3803921568, 0.3725490196, 0.78, 0.78, 0.78, 0.5, 0.5, 0.5]
+inserting_target_irradiance_list = [0.5, 0.1, 0.1, 0.1]

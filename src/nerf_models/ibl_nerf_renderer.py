@@ -184,12 +184,6 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 		weights: [num_rays, num_samples]. Weights assigned to each sampled color.
 		depth_map: [num_rays]. Estimated distance to object.
 	"""
-	if kwargs.get("add_object_mode", False):
-		return raw2outputs_additional(rays_o, rays_d, z_vals, z_vals_constant,
-							   network_query_fn, network_fn,
-							   raw_noise_std=raw_noise_std, pytest=pytest,
-							   gt_values=gt_values,
-							   **kwargs)
 
 	# radiance & gamma correct setting
 	is_radiance_sigmoid = not kwargs.get('use_radiance_linear', False)
@@ -221,6 +215,28 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 			noise = np.random.rand(*list(raw[..., 0].shape)) * raw_noise_std
 			noise = torch.Tensor(noise)
 
+	assert (not kwargs.get("load_edit_intrinsic_mask") or not kwargs.get("insert_object")), "edit_intrinsic and insert_object cannot be True at the same time"
+	# intrinsic edit
+	if kwargs.get("load_edit_intrinsic_mask", False):
+		num_edit_objects = kwargs.get("num_edit_objects")
+		assert num_edit_objects > 0, "num_edit_objects must be greater than 0"
+		mask_img = gt_values["edit_intrinsic_mask"][:, 0]
+		masks = []
+		for object_idx in range(num_edit_objects):
+			# rgb value of ith object is [10(i+1), 10(i+1), 10(i+1)]
+			masks.append(torch.logical_and(11 * object_idx / 255. > mask_img, mask_img > 9 * object_idx / 255.))
+		mask_all = mask_img > 0
+	# object insert
+	elif kwargs.get("insert_object", False):
+		num_insert_objects = kwargs.get("num_insert_objects")
+		assert num_insert_objects > 0, "num_insert_objects must be greater than 0"
+		mask_img = gt_values["object_insert_mask"][:, 0]
+		masks = []
+		for object_idx in range(num_insert_objects):
+			# rgb value of ith object is [10(i+1), 10(i+1), 10(i+1)]
+			masks.append(torch.logical_and(11 * (object_idx + 1) / 255. > mask_img, mask_img > 9 * (object_idx + 1) / 255.))
+		mask_all = mask_img > 0
+
 	# (0) get sigma
 	raw2sigma = lambda raw, dists, act_fn=F.relu: 1. - torch.exp(-act_fn(raw) * dists)
 	sigma = raw2sigma(raw[..., 0] + noise, dists)
@@ -234,6 +250,9 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 	target_depth_map = depth_map
 	if kwargs.get("depth_map_from_ground_truth", False):
 		target_depth_map = gt_values["depth"][..., 0]
+
+	if kwargs.get("insert_object", False):
+		target_depth_map[mask_all] = gt_values["object_insert_depth"][..., 0][mask_all]
 
 	disp_map = 1. / torch.max(1e-10 * torch.ones_like(depth_map), depth_map / torch.sum(weights, -1))
 	acc_map = torch.sum(weights, -1)
@@ -353,6 +372,36 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 			target_normal_map = inferred_normal_map
 		else:
 			raise ValueError
+
+		# Edit!
+		if kwargs.get("load_edit_intrinsic_mask", False):
+			# Override normal
+			if kwargs.get("edit_normal", False):
+				gt_normal_map = normalize(2 * gt_values["edit_normal"] - 1, dim=-1)
+				target_normal_map[mask_all] = gt_normal_map[mask_all]
+			# Override albedo
+			assert not kwargs.get("edit_albedo", False) or not len(kwargs.get("editing_target_albedo_list", [])) == 0, "Cannot load both edit_albedo and editing_target_albedo_list"
+			if kwargs.get("edit_albedo", False):
+				target_albedo_map[mask_all] = gt_values["edit_albedo"][mask_all]
+			for object_idx in range(num_edit_objects):
+				target_albedo_map[masks[object_idx]] = torch.Tensor(kwargs.get("editing_target_albedo_list", [])[object_idx * 3:object_idx * 3 + 3])
+			# Override roughness
+			assert not kwargs.get("edit_roughness", False) or not len(kwargs.get("editing_target_roughness_list", [])) == 0, "Cannot load both edit_roughness and editing_target_roughness_list"
+			if kwargs.get("edit_roughness", False):
+				target_roughness_map[mask_all] = gt_values["edit_roughness"][mask_all][0]
+			for object_idx, editing_roughness in kwargs.get("editing_target_roughness_list", []):
+				target_roughness_map[masks[object_idx]] = editing_roughness
+
+		elif kwargs.get("insert_object", False):
+			gt_normal_map = normalize(2 * gt_values["object_insert_normal"] - 1, dim=-1)
+			target_normal_map[mask_all] = gt_normal_map[mask_all]
+			assert kwargs.get("num_insert_objects", 0) == len(kwargs.get("inserting_target_roughness_list", [])), "Number of inserting objects does not match number of roughness values"
+			assert kwargs.get("num_insert_objects", 0) == len(kwargs.get("inserting_target_albedo_list", [])) / 3, "Number of inserting objects does not match number of albedo values"
+			for object_idx in range(kwargs.get("num_insert_objects", 0)):
+				target_roughness_map[masks[object_idx]] = kwargs.get("inserting_target_roughness_list", [])[object_idx]
+				if kwargs.get("inserting_target_irradiance_list", [])[object_idx] > 0:
+					target_irradiance_map[masks[object_idx]] = kwargs.get("inserting_target_irradiance_list", [])[object_idx]
+				target_albedo_map[masks[object_idx]] = torch.Tensor(kwargs.get("inserting_target_albedo_list", [])[3 * object_idx:3 * object_idx + 3])
 
 		n_dot_v = torch.sum(-rays_d * target_normal_map, -1)
 		n_dot_v = torch.clip(n_dot_v, 0, 1)
@@ -805,13 +854,12 @@ def render_decomp_path(
 			imageio.imwrite(filename, result_image_8bit)
 
 	for i, c2w in enumerate(tqdm(render_poses)):
-		roughness_t = np.sin(i / 100 * np.pi * 2) * 0.5 + 0.5
 
 		gt_values = dataset_test.get_resized_normal_albedo(render_factor, i)
 		for k in gt_values.keys():
 			gt_values[k] = torch.reshape(gt_values[k], [-1, gt_values[k].shape[-1]])
 		results_i = render_decomp(
-			H, W, K, chunk=chunk, c2w=c2w[:3, :4], gt_values=gt_values, roughness=roughness_t, **render_kwargs, **kwargs
+			H, W, K, chunk=chunk, c2w=c2w[:3, :4], gt_values=gt_values, **render_kwargs, **kwargs
 		)
 		append_result(results_i, "color_map", i, "rgb")
 		append_result(results_i, "radiance_map", i, "radiance")

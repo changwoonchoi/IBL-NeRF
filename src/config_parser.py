@@ -15,6 +15,7 @@ def load_all_include(config_file):
 	else:
 		return include
 
+
 def recursive_config_parser():
 	parser = config_parser()
 	args = parser.parse_args()
@@ -81,20 +82,11 @@ def config_parser(default_files=None):
 	parser.add_argument("--beta_res", type=float, default=1., help="")
 	parser.add_argument("--beta_mod", type=float, default=1., help="")
 	parser.add_argument("--beta_indirect", type=float, default=1., help="")
-	parser.add_argument("--beta_smooth_albedo", type=float, default=1., help="")
-	parser.add_argument("--beta_smooth_indirect", type=float, default=1., help="")
 	parser.add_argument("--beta_render", type=float, default=1.)
-	parser.add_argument("--beta_albedo_cluster", type=float, default=1.)
-	parser.add_argument("--beta_indirect_sparse", type=float, default=1.)
 	parser.add_argument("--beta_inferred_normal", type=float, default=0.1)
 	parser.add_argument("--beta_albedo_render", type=float, default=1.)
 	parser.add_argument("--beta_radiance_render", type=float, default=1.)
 	parser.add_argument("--beta_inferred_depth", type=float, default=1.)
-	parser.add_argument("--beta_roughness_smooth", type=float, default=0.001)
-	parser.add_argument("--beta_albedo_smooth", type=float, default=0.001)
-	parser.add_argument("--beta_irradiance_smooth", type=float, default=0.001)
-	parser.add_argument("--smooth_weight_decay", type=float, default=0.)
-	parser.add_argument("--smooth_weight_type", type=str, default="color")
 	parser.add_argument("--beta_instance", type=float, default=1.)
 	parser.add_argument("--beta_instancewise_constant", type=float, default=0.1)
 	parser.add_argument("--beta_sigma_depth", type=float, default=1)
@@ -217,21 +209,11 @@ def config_parser(default_files=None):
 	parser.add_argument("--testskip", type=int, default=8,
 	                    help='will load 1/N images from test/val sets, useful for large datasets like deepvoxels')
 
-	# clustering options
-	parser.add_argument("--cluster_image_number", type=int, default=-1, help='how many images will be used for clustering? -1 to use all')
-	parser.add_argument("--cluster_image_resize", type=float, default=0.5, help='resize image for clustering?')
-	parser.add_argument("--cluster_init_number", type=int, default=8, help='initial cluster size')
-	parser.add_argument("--cluster_number_lower_bound", type=int, default=4, help='minimum number of cluster')
-	parser.add_argument("--cluster_merge_threshold", type=float, default=0.1, help='cluster merge threshold')
 
 	# clevr options
-	parser.add_argument("--sample_length", type=float, default=8, help='sampling length along ray')
 	parser.add_argument("--near_plane", type=float, default=1, help='near_plane')
 	parser.add_argument("--far_plane", type=float, default=20, help='far_plane')
 
-	## deepvoxels flags
-	parser.add_argument("--shape", type=str, default='greek',
-	                    help='options : armchair / cube / greek / vase')
 
 	## blender flags
 	parser.add_argument("--white_bkgd", action='store_true',
@@ -257,6 +239,34 @@ def config_parser(default_files=None):
 	parser.add_argument("--i_weights", type=int, default=10000, help='frequency of weight ckpt saving')
 	parser.add_argument("--i_testset", type=int, default=50000, help='frequency of testset saving')
 	parser.add_argument("--i_video", type=int, default=50000, help='frequency of render_poses video saving')
+
+	# editing options
+	parser.add_argument("--edit_intrinsic", action='store_true', help='edit_intrinsic')
+	parser.add_argument("--editing_img_idx", type=int, default=0, help='index of image to edit')
+
+	parser.add_argument("--edit_roughness", action='store_true', help='edit_roughness')
+	parser.add_argument("--edit_albedo", action='store_true', help='edit_albedo')
+	parser.add_argument("--edit_normal", action='store_true', help='edit_normal')
+
+	parser.add_argument("--num_edit_objects", type=int, default=1, help='num_edit_objects')
+
+	parser.add_argument("--edit_albedo_by_img", action='store_true', help='edit_albedo_by_img')
+	parser.add_argument("--edit_normal_by_img", action='store_true', help='edit_normal_by_img')
+	parser.add_argument("--edit_irradiance_by_img", action='store_true', help='edit_irradiance_by_img')
+
+	parser.add_argument("--editing_target_roughness_list", type=float, action="append")
+	parser.add_argument("--editing_target_albedo_list", action="append")
+	parser.add_argument("--editing_target_irradiance_list", type=float, action="append")
+
+	# inserting options
+	parser.add_argument("--insert_object", action='store_true', help='insert_object')
+	parser.add_argument("--inserting_img_idx", type=int, default=0, help='index of image to insert')
+
+	parser.add_argument("--num_insert_objects", type=int, default=1, help='num_insert_objects')
+
+	parser.add_argument("--inserting_target_roughness_list", type=float, action="append")
+	parser.add_argument("--inserting_target_albedo_list", type=float, action="append")
+	parser.add_argument("--inserting_target_irradiance_list", type=float, action="append")
 
 	return parser
 
