@@ -72,7 +72,9 @@ class MitsubaDataset(NerfDataset):
 		edit_intrinsic_mask_file_path = os.path.join(self.basedir, self.split, "%d_edit_intrinsic_mask.png" % target_index)
 		edit_albedo_file_path = os.path.join(self.basedir, self.split, "%d_edit_albedo.png" % target_index)
 		edit_normal_file_path = os.path.join(self.basedir, self.split, "%d_edit_normal.png" % target_index)
+		edit_roughness_file_path = os.path.join(self.basedir, self.split, "%d_edit_roughness.png" % target_index)
 		edit_irradiance_file_path = os.path.join(self.basedir, self.split, "%d_edit_irradiance.png" % target_index)
+		edit_depth_file_path = os.path.join(self.basedir, self.split, "%d_edit_depth.npy" % target_index)
 		# object insert related
 		object_insert_mask_file_path = os.path.join(self.basedir, self.split, "%d_insert_mask.png" % target_index)
 		object_insert_depth_file_path = os.path.join(self.basedir, self.split, "%d_insert_depth.npy" % target_index)
@@ -109,8 +111,12 @@ class MitsubaDataset(NerfDataset):
 				sample["edit_albedo"] = load_image_from_path(edit_albedo_file_path, scale=self.scale)
 			if self.load_edit_normal:
 				sample["edit_normal"] = load_image_from_path(edit_normal_file_path, scale=self.scale)
+			if self.load_edit_roughness:
+				sample["edit_roughness"] = load_image_from_path(edit_roughness_file_path, scale=self.scale)[..., 0:1]
 			if self.load_edit_irradiance:
 				sample["edit_irradiance"] = load_image_from_path(edit_irradiance_file_path, scale=self.scale)
+			if self.load_edit_depth:
+				sample["edit_depth"] = load_numpy_from_path(edit_depth_file_path, scale=self.scale)[..., None]
 
 		if self.object_insert:
 			sample["object_insert_mask"] = load_image_from_path(object_insert_mask_file_path, scale=self.scale)

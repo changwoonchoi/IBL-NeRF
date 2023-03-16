@@ -247,11 +247,13 @@ def config_parser(default_files=None):
 	parser.add_argument("--edit_roughness", action='store_true', help='edit_roughness')
 	parser.add_argument("--edit_albedo", action='store_true', help='edit_albedo')
 	parser.add_argument("--edit_normal", action='store_true', help='edit_normal')
+	parser.add_argument("--edit_depth", action='store_true', help='edit_depth')
 
 	parser.add_argument("--num_edit_objects", type=int, default=1, help='num_edit_objects')
 
 	parser.add_argument("--edit_albedo_by_img", action='store_true', help='edit_albedo_by_img')
 	parser.add_argument("--edit_normal_by_img", action='store_true', help='edit_normal_by_img')
+	parser.add_argument("--edit_roughness_by_img", action='store_true', help='edit_roughness_by_img')
 	parser.add_argument("--edit_irradiance_by_img", action='store_true', help='edit_irradiance_by_img')
 
 	parser.add_argument("--editing_target_roughness_list", type=float, action="append")

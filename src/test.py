@@ -61,6 +61,7 @@ def test(args):
             "load_edit_albedo": args.edit_albedo_by_img,
             "load_edit_normal": args.edit_normal_by_img,
             "load_edit_irradiance": args.edit_irradiance_by_img,
+            "load_edit_depth": args.edit_depth,
 
             "object_insert": args.insert_object,
 
@@ -115,10 +116,15 @@ def test(args):
         # editing options
         "edit_intrinsic": args.edit_intrinsic,
         "editing_img_idx": args.editing_img_idx,
+        "num_edit_objects": args.num_edit_objects,
         "edit_roughness": args.edit_roughness,
         "edit_albedo": args.edit_albedo,
         "edit_normal": args.edit_normal,
-        "num_edit_objects": args.num_edit_objects,
+        "edit_depth": args.edit_depth,
+        "edit_albedo_by_img": args.edit_albedo_by_img,
+        "edit_normal_by_img": args.edit_normal_by_img,
+        "edit_roughness_by_img": args.edit_roughness_by_img,
+        "edit_irradiance_by_img": args.edit_irradiance_by_img,
         "editing_target_roughness_list": args.editing_target_roughness_list,
         "editing_target_albedo_list": args.editing_target_albedo_list,
         "editing_target_irradiance_list": args.editing_target_irradiance_list,

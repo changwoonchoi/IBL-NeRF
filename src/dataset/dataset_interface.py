@@ -70,12 +70,16 @@ class NerfDataset(Dataset, ABC):
 		self.load_edit_intrinsic_mask = kwargs.get("load_edit_intrinsic_mask", False)
 		self.load_edit_albedo = kwargs.get("load_edit_albedo", False)
 		self.load_edit_normal = kwargs.get("load_edit_normal", False)
+		self.load_edit_roughness = kwargs.get("load_edit_roughness", False)
 		self.load_edit_irradiance = kwargs.get("load_edit_irradiance", False)
+		self.load_edit_depth = kwargs.get("load_edit_depth", False)
 
 		self.edit_intrinsic_masks = []
 		self.edit_albedos = []
 		self.edit_normals = []
+		self.edit_roughnesses = []
 		self.edit_irradiances = []
+		self.edit_depths = []
 
 		self.object_insert = kwargs.get("object_insert", False)
 		self.object_insert_masks = []
@@ -131,6 +135,14 @@ class NerfDataset(Dataset, ABC):
 		if self.load_edit_normal:
 			edit_normal_temp = self.edit_normals[i].permute((2, 0, 1))
 			result["edit_normal"] = t(edit_normal_temp).permute((1, 2, 0))
+
+		if self.load_edit_depth:
+			edit_depth_temp = self.edit_depths[i].permute((2, 0, 1))
+			result["edit_depth"] = t(edit_depth_temp).permute((1, 2, 0))
+
+		if self.load_edit_roughness:
+			edit_roughness_temp = self.edit_roughnesses[i].permute((2, 0, 1))
+			result["edit_roughness"] = t(edit_roughness_temp).permute((1, 2, 0))
 
 		if self.load_edit_irradiance:
 			edit_irradiance_temp = self.edit_irradiances[i].permute((2, 0, 1))
@@ -229,8 +241,10 @@ class NerfDataset(Dataset, ABC):
 				self.edit_albedos.append(data["edit_albedo"][0])
 			if self.load_edit_normal:
 				self.edit_normals.append(data["edit_normal"][0])
-			if self.load_edit_normal:
-				self.edit_normals.append(data["edit_normal"][0])
+			if self.load_edit_depth:
+				self.edit_depths.append(data["edit_depth"][0])
+			if self.load_edit_roughness:
+				self.edit_roughnesses.append(data["edit_roughness"][0])
 			if self.load_edit_irradiance:
 				self.edit_irradiances.append(data["edit_irradiance"][0])
 			if self.object_insert:
@@ -274,6 +288,10 @@ class NerfDataset(Dataset, ABC):
 			self.edit_albedos = torch.stack(self.edit_albedos, 0).to(device)
 		if self.load_edit_normal:
 			self.edit_normals = torch.stack(self.edit_normals, 0).to(device)
+		if self.load_edit_roughness:
+			self.edit_roughnesses = torch.stack(self.edit_roughnesses, 0).to(device)
+		if self.load_edit_depth:
+			self.edit_depths = torch.stack(self.edit_depths, 0).to(device)
 		if self.load_edit_irradiance:
 			self.edit_irradiances = torch.stack(self.edit_irradiances, 0).to(device)
 		if self.object_insert:

@@ -217,14 +217,14 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 
 	assert (not kwargs.get("load_edit_intrinsic_mask") or not kwargs.get("insert_object")), "edit_intrinsic and insert_object cannot be True at the same time"
 	# intrinsic edit
-	if kwargs.get("load_edit_intrinsic_mask", False):
+	if kwargs.get("edit_intrinsic", False):
 		num_edit_objects = kwargs.get("num_edit_objects")
 		assert num_edit_objects > 0, "num_edit_objects must be greater than 0"
 		mask_img = gt_values["edit_intrinsic_mask"][:, 0]
 		masks = []
 		for object_idx in range(num_edit_objects):
 			# rgb value of ith object is [10(i+1), 10(i+1), 10(i+1)]
-			masks.append(torch.logical_and(11 * object_idx / 255. > mask_img, mask_img > 9 * object_idx / 255.))
+			masks.append(torch.logical_and(11 * (object_idx + 1) / 255. > mask_img, mask_img > 9 * (object_idx + 1) / 255.))
 		mask_all = mask_img > 0
 	# object insert
 	elif kwargs.get("insert_object", False):
@@ -250,7 +250,8 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 	target_depth_map = depth_map
 	if kwargs.get("depth_map_from_ground_truth", False):
 		target_depth_map = gt_values["depth"][..., 0]
-
+	if kwargs.get("edit_intrinsic", False) and kwargs.get("edit_depth", False):
+		target_depth_map[mask_all] = gt_values["edit_depth"][..., 0][mask_all]
 	if kwargs.get("insert_object", False):
 		target_depth_map[mask_all] = gt_values["object_insert_depth"][..., 0][mask_all]
 
@@ -374,7 +375,7 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 			raise ValueError
 
 		# Edit!
-		if kwargs.get("load_edit_intrinsic_mask", False):
+		if kwargs.get("edit_intrinsic", False):
 			# Override normal
 			if kwargs.get("edit_normal", False):
 				gt_normal_map = normalize(2 * gt_values["edit_normal"] - 1, dim=-1)
@@ -382,15 +383,20 @@ def raw2outputs(rays_o, rays_d, z_vals, z_vals_constant,
 			# Override albedo
 			assert not kwargs.get("edit_albedo", False) or not len(kwargs.get("editing_target_albedo_list", [])) == 0, "Cannot load both edit_albedo and editing_target_albedo_list"
 			if kwargs.get("edit_albedo", False):
-				target_albedo_map[mask_all] = gt_values["edit_albedo"][mask_all]
-			for object_idx in range(num_edit_objects):
-				target_albedo_map[masks[object_idx]] = torch.Tensor(kwargs.get("editing_target_albedo_list", [])[object_idx * 3:object_idx * 3 + 3])
+				if kwargs.get("edit_albedo_by_img", False):
+					target_albedo_map[mask_all] = gt_values["edit_albedo"][mask_all]
+				else:
+					for object_idx in range(num_edit_objects):
+						target_albedo_map[masks[object_idx]] = torch.Tensor(kwargs.get("editing_target_albedo_list", [])[object_idx * 3:object_idx * 3 + 3])
 			# Override roughness
 			assert not kwargs.get("edit_roughness", False) or not len(kwargs.get("editing_target_roughness_list", [])) == 0, "Cannot load both edit_roughness and editing_target_roughness_list"
 			if kwargs.get("edit_roughness", False):
-				target_roughness_map[mask_all] = gt_values["edit_roughness"][mask_all][0]
-			for object_idx, editing_roughness in kwargs.get("editing_target_roughness_list", []):
-				target_roughness_map[masks[object_idx]] = editing_roughness
+				if kwargs.get("edit_roughness_by_img"):
+					target_roughness_map[mask_all] = gt_values["edit_roughness"][mask_all][0]
+				else:
+					for object_idx, editing_roughness in enumerate(kwargs.get("editing_target_roughness_list", [])):
+						target_roughness_map[masks[object_idx]] = editing_roughness
+			# TODO: other components. e.g.) irradiance, ...
 
 		elif kwargs.get("insert_object", False):
 			gt_normal_map = normalize(2 * gt_values["object_insert_normal"] - 1, dim=-1)
