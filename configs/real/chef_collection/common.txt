@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/Bespoke_Images/Chef_Collection_RF10T9985AP_colmap_new
+basedir = ../logs/Bespoke/chef_collection

@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/Bespoke_Images/Bespoke_RF85T97E2AP_scan_2_colmap_new
+basedir = ../logs/Bespoke/scan2

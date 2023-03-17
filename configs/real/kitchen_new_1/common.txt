@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/Bespoke_Images/kitchen_new_1
+basedir = ../logs/Bespoke/kitchen_new_1

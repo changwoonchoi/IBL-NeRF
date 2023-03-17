@@ -56,15 +56,16 @@ def train(args):
 		dataset = load_dataset_split("train", **load_params)
 
 		# force load albedo, normal, and irradiance for test set
-		load_params["load_albedo"] = True
-		load_params["load_normal"] = True
-		load_params["load_irradiance"] = True
+		if args.dataset_type == "mitsuba":
+			load_params["load_albedo"] = True
+			load_params["load_normal"] = True
+			load_params["load_irradiance"] = True
 
 		# force not to load albedo & irradiance prior images for test set
 		load_params["load_priors"] = False
 		if args.dataset_type == "mitsuba":
 			dataset_val = load_dataset_split("test", skip=10, **load_params)
-		elif args.datset_type == "colmap":
+		elif args.dataset_type == "colmap":
 			dataset_val = load_dataset_split("test", skip=1, **load_params)
 		else:
 			raise ValueError("We provide only IBL-NeRF dataset for current version.")
@@ -143,13 +144,14 @@ def train(args):
 		img_gt_k = dataset_val.prefiltered_images[k].permute((0, 3, 1, 2))#.get_coarse_images(k+1)
 		writer.add_images('test/gt_rgb_coarse_%d' % (k+1), img_gt_k, 0)
 
-	normal_gt = dataset_val.normals.permute((0, 3, 1, 2))
-	albedo_gt = dataset_val.albedos.permute((0, 3, 1, 2))
-	irradiance_gt = dataset_val.irradiances.permute((0, 3, 1, 2))
+	if args.dataset_type == "mitsuba":
+		normal_gt = dataset_val.normals.permute((0, 3, 1, 2))
+		albedo_gt = dataset_val.albedos.permute((0, 3, 1, 2))
+		irradiance_gt = dataset_val.irradiances.permute((0, 3, 1, 2))
 
-	writer.add_images('test/gt_irradiance', irradiance_gt, 0)
-	writer.add_images('test/gt_normal', normal_gt, 0)
-	writer.add_images('test/gt_albedo', albedo_gt, 0)
+		writer.add_images('test/gt_irradiance', irradiance_gt, 0)
+		writer.add_images('test/gt_normal', normal_gt, 0)
+		writer.add_images('test/gt_albedo', albedo_gt, 0)
 
 
 	mse_loss = torch.nn.MSELoss()
