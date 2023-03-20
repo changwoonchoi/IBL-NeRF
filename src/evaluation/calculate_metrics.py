@@ -7,11 +7,11 @@ import json
 from piq import ssim, psnr
 
 
-def calculate_metrics(gt_path, pred_path, dataset_type):
+def calculate_metrics(gt_path, pred_path, dataset_type, target):
     metrics = {'ssim': [], 'psnr': [], 'mse': []}
     if dataset_type == "mitsuba":
         for i in range(100):
-            pred_img = cv2.imread(os.path.join(pred_path, f"rgb_{i:03d}.png"))
+            pred_img = cv2.imread(os.path.join(pred_path, f"{args.target}_{i:03d}.png"))
             pred_img = cv2.cvtColor(pred_img, cv2.COLOR_BGR2RGB)
             pred_img = pred_img.astype(np.float32)
             pred_img /= 255.0
@@ -49,7 +49,7 @@ def calculate_metrics(gt_path, pred_path, dataset_type):
             gt_img = gt_img.astype(np.float32)
             gt_img /= 255.0
 
-            pred_img = cv2.imread(os.path.join(pred_path, f"rgb_{i:03d}.png"))
+            pred_img = cv2.imread(os.path.join(pred_path, f"{args.target}_{i:03d}.png"))
             pred_img = cv2.cvtColor(pred_img, cv2.COLOR_BGR2RGB)
             pred_img = pred_img.astype(np.float32)
             pred_img /= 255.0
@@ -73,8 +73,9 @@ if __name__ == '__main__':
     parser.add_argument("--gt", required=True, type=str, help="path to ground truth images")
     parser.add_argument("--pred", required=True, type=str, help="path to inferred images")
     parser.add_argument("--dataset_type", required=True, type=str, choices=["mitsuba", "bespoke"])
+    parser.add_argument("--target", type=str, default="rgb", choices=["rgb", "radiance"])
     args = parser.parse_args()
-    results = calculate_metrics(args.gt, args.pred, args.dataset_type)
+    results = calculate_metrics(args.gt, args.pred, args.dataset_type, args.target)
     print(f"ssim: {np.mean(np.asarray(results['ssim']))}")
     print(f"psnr: {np.mean(np.asarray(results['psnr']))}")
     print(f"mse: {np.mean(np.asarray(results['mse']))}")
