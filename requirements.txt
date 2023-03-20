@@ -5,3 +5,4 @@ configargparse
 tensorboard
 tqdm
 opencv-python
+piq

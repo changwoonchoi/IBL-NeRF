@@ -1,18 +1,6 @@
-from abc import ABC
-
-from torch.utils.data import Dataset
-import os
-import numpy as np
 import json
 import imageio
-import torch
-from utils.label_utils import colored_mask_to_label_map_np
-from utils.math_utils import pose_spherical
-
-import matplotlib.pyplot as plt
 from dataset.dataset_interface import NerfDataset
-from torchvision import transforms
-import cv2
 import math
 from utils.image_utils import *
 
@@ -38,9 +26,6 @@ class MitsubaDataset(NerfDataset):
 		with open(os.path.join(basedir, 'transforms_{}.json'.format(self.split)), 'r') as fp:
 			self.meta = json.load(fp)
 
-		self.instance_color_list = []
-		self.instance_num = 0
-
 		self.basedir = basedir
 
 		self.skip = kwargs.get("skip", 1)
@@ -57,29 +42,43 @@ class MitsubaDataset(NerfDataset):
 		self.width = int(self.original_width * self.scale)
 		self.focal = .5 * self.width / np.tan(0.5 * self.camera_angle_x)
 
-
 	def __len__(self):
-		return len(self.meta['frames'][::self.skip])
+		return len(self.meta['frames'][::self.skip]) if self.editing_idx is None else 1
 
 	def __getitem__(self, index):
 		sample = {}
+		target_index = (self.skip * index + 1) if self.editing_idx is None else self.editing_idx
 
 		"""
 		Load single data corresponding to specific index
 		:param index: data index
 		"""
-		frame = self.meta['frames'][::self.skip][index]
-		image_file_path = os.path.join(self.basedir, self.split, "%d.png" % (self.skip * index + 1))
-		mask_file_path = os.path.join(self.basedir, self.split, "%d_mask.png" % (self.skip * index + 1))
-		normal_file_path = os.path.join(self.basedir, self.split, "%d_normal.png" % (self.skip * index + 1))
-		albedo_file_path = os.path.join(self.basedir, self.split, "%d_albedo.png" % (self.skip * index + 1))
-		roughness_file_path = os.path.join(self.basedir, self.split, "%d_roughness.png" % (self.skip * index + 1))
-		depth_file_path = os.path.join(self.basedir, self.split, "%d_depth.npy" % (self.skip * index + 1))
-		diffuse_file_path = os.path.join(self.basedir, self.split, "%d_diffuse.png" % (self.skip * index + 1))
-		specular_file_path = os.path.join(self.basedir, self.split, "%d_specular.png" % (self.skip * index + 1))
-		irradiance_file_path = os.path.join(self.basedir, self.split, "%d_irradiance.png" % (self.skip * index + 1))
-		prior_albedo_file_path = os.path.join(self.basedir, self.split, "{}_{}_r.png".format(self.skip * index + 1, self.prior_type))
-		prior_irradiance_file_path = os.path.join(self.basedir, self.split, "{}_{}_s.png".format(self.skip * index + 1, self.prior_type))
+		if self.editing_idx is not None:
+			frame = self.meta['frames'][self.editing_idx - 1]
+		else:
+			frame = self.meta['frames'][::self.skip][index]
+		image_file_path = os.path.join(self.basedir, self.split, "%d.png" % target_index)
+		normal_file_path = os.path.join(self.basedir, self.split, "%d_normal.png" % target_index)
+		albedo_file_path = os.path.join(self.basedir, self.split, "%d_albedo.png" % target_index)
+		roughness_file_path = os.path.join(self.basedir, self.split, "%d_roughness.png" % target_index)
+		depth_file_path = os.path.join(self.basedir, self.split, "%d_depth.npy" % target_index)
+		diffuse_file_path = os.path.join(self.basedir, self.split, "%d_diffuse.png" % target_index)
+		specular_file_path = os.path.join(self.basedir, self.split, "%d_specular.png" % target_index)
+		irradiance_file_path = os.path.join(self.basedir, self.split, "%d_irradiance.png" % target_index)
+		prior_albedo_file_path = os.path.join(self.basedir, self.split, "{}_{}_r.png".format(target_index, self.prior_type))
+		prior_irradiance_file_path = os.path.join(self.basedir, self.split, "{}_{}_s.png".format(target_index, self.prior_type))
+
+		# intrinsic edit related
+		edit_intrinsic_mask_file_path = os.path.join(self.basedir, self.split, "%d_edit_intrinsic_mask.png" % target_index)
+		edit_albedo_file_path = os.path.join(self.basedir, self.split, "%d_edit_albedo.png" % target_index)
+		edit_normal_file_path = os.path.join(self.basedir, self.split, "%d_edit_normal.png" % target_index)
+		edit_roughness_file_path = os.path.join(self.basedir, self.split, "%d_edit_roughness.png" % target_index)
+		edit_irradiance_file_path = os.path.join(self.basedir, self.split, "%d_edit_irradiance.png" % target_index)
+		edit_depth_file_path = os.path.join(self.basedir, self.split, "%d_edit_depth.npy" % target_index)
+		# object insert related
+		object_insert_mask_file_path = os.path.join(self.basedir, self.split, "%d_insert_mask.png" % target_index)
+		object_insert_depth_file_path = os.path.join(self.basedir, self.split, "%d_insert_depth.npy" % target_index)
+		object_insert_normal_file_path = os.path.join(self.basedir, self.split, "%d_insert_normal.png" % target_index)
 
 		# (1) load RGB Image
 		if self.load_image:
@@ -105,6 +104,24 @@ class MitsubaDataset(NerfDataset):
 		if self.load_priors:
 			sample["prior_albedo"] = load_image_from_path(prior_albedo_file_path, scale=self.scale)
 			sample["prior_irradiance"] = load_image_from_path(prior_irradiance_file_path, scale=self.scale)
+
+		if self.load_edit_intrinsic_mask:
+			sample["edit_intrinsic_mask"] = load_image_from_path(edit_intrinsic_mask_file_path, scale=self.scale)
+			if self.load_edit_albedo:
+				sample["edit_albedo"] = load_image_from_path(edit_albedo_file_path, scale=self.scale)
+			if self.load_edit_normal:
+				sample["edit_normal"] = load_image_from_path(edit_normal_file_path, scale=self.scale)
+			if self.load_edit_roughness:
+				sample["edit_roughness"] = load_image_from_path(edit_roughness_file_path, scale=self.scale)[..., 0:1]
+			if self.load_edit_irradiance:
+				sample["edit_irradiance"] = load_image_from_path(edit_irradiance_file_path, scale=self.scale)
+			if self.load_edit_depth:
+				sample["edit_depth"] = load_numpy_from_path(edit_depth_file_path, scale=self.scale)[..., None]
+
+		if self.object_insert:
+			sample["object_insert_mask"] = load_image_from_path(object_insert_mask_file_path, scale=self.scale)
+			sample["object_insert_normal"] = load_image_from_path(object_insert_normal_file_path, scale=self.scale)
+			sample["object_insert_depth"] = load_numpy_from_path(object_insert_depth_file_path, scale=self.scale)[..., None]
 
 
 		# (2) load pose information

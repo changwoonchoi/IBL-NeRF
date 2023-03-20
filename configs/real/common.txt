@@ -1,0 +1,19 @@
+include = ../common.txt
+
+basedir = ../logs/real
+dataset_type = colmap
+
+near_plane = 0.5
+far_plane = 20
+
+N_iter_ignore_prior = 400000
+N_iter = 500000
+N_iter_ignore_approximated_radiance = 200000
+
+image_scale = 0.5
+
+i_video = 10000000000000
+i_testset = 10000
+testskip = 1
+
+prior_type = ting

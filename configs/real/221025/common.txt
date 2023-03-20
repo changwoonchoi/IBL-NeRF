@@ -1,0 +1,3 @@
+include = ../common.txt
+datadir = ../data/Bespoke_Images/221025_bespoke
+basedir = ../logs/Bespoke/221025_bespoke
