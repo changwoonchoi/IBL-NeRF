@@ -1,5 +1,5 @@
 # IBL-NeRF
-Official implementation of the paper "IBL-NeRF: Image-Based Lighting Formulation of Neural Radiance Fields".
+Official implementation of <b>IBL-NeRF: Image-Based Lighting Formulation of Neural Radiance Fields (Computer Graphics Forum, Proceedings of Pacific Graphics 2023)<b>
 <div style="text-align:center">
 <img src="assets/teaser.png" alt="teaser image"/>
 </div>
